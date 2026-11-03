@@ -1,0 +1,25 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell scripts parse
+        run: for s in templates/*/*.sh tools/*.sh tests/run.sh; do sh -n "$s"; done
+      - name: Host tests (LED drivers, MIDI parser)
+        run: tests/run.sh
+      - name: Device builds (zig, aarch64)
+        run: |
+          pip install ziglang==0.14.1
+          make -C tools
+          make -C examples/skeleton package
+          file tools/build/evdump tools/build/joydump examples/skeleton/build/trimui/skeleton | tee /dev/stderr | grep -c "ARM aarch64" | grep -qx 3
+          # the MustardOS package has mux_launch.sh; the TrimUI OS one must not
+          unzip -l examples/skeleton/build/Skeleton-mustardos.muxapp | grep -q "Skeleton/mux_launch.sh$"
+          if unzip -l examples/skeleton/build/Skeleton-trimui.zip | grep -q mux_launch.sh; then exit 1; fi

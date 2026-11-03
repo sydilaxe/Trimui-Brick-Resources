@@ -1,0 +1,6 @@
+{
+"label":"Skeleton",
+"icon":"icon.png",
+"launch":"launch.sh",
+"description":"Audio app skeleton (MENU to exit)"
+}
