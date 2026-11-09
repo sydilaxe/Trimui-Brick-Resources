@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     }
     bi_init("JD");
     bi_open_joysticks(); /* prints each controller to stderr */
-    printf("brick pro: %d, MustardOS: %d, pad kind read: %d\n", bi_is_brickpro(), bi_is_mustardos(), bi_pad_kind());
+    printf("brick pro: %d, pad kind read: %d\n", bi_is_brickpro(), bi_pad_kind());
     printf("side switch (GPIO 243): %d\n-- press things\n", bi_switch_read());
     fflush(stdout);
     Uint32 end = SDL_GetTicks() + (Uint32)secs * 1000;

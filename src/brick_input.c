@@ -13,30 +13,23 @@
 const char *const bi_button_names[BI_COUNT] = {"UP", "DOWN", "LEFT", "RIGHT", "A", "B", "X", "Y", "L1", "R1",
                                                "L2", "R2", "SELECT", "START", "MENU", "F1", "F2", "L3", "R3",
                                                "HOME"};
-static const char *const pad_names[BI_PAD_KINDS] = {"TrimUI OS", "MustardOS (Brick)", "MustardOS (Brick Pro)"};
+static const char *const pad_names[BI_PAD_KINDS] = {"MustardOS (Brick)", "MustardOS (Brick Pro)"};
 
 /* Each pad's SDL button number for each BiButton (-1: not a button there).
- * The d-pad is hat 0 everywhere; TrimUI OS's L2 / R2 are axes 2 and 5. */
-static const signed char map_trimui_brick[BI_COUNT] = {
-    /* UP DN LT RT  A  B  X  Y  L1 R1 L2  R2 SEL STA MENU F1  F2  L3  R3  HOME */
-    -1, -1, -1, -1, 1, 0, 3, 2, 4, 5, -1, -1, 6, 7, 8, 9, 10, -1, -1, -1};
-static const signed char map_trimui_brickpro[BI_COUNT] = {
-    /* F1 / F2 are 11 / 12 (NextUI's L4 / R4), the stick clicks 9 / 10; HOME 15 is
-     * NextUI's MENU_ALT (unverified) */
-    -1, -1, -1, -1, 1, 0, 3, 2, 4, 5, -1, -1, 6, 7, 8, 11, 12, 9, 10, 15};
+ * The d-pad is hat 0; L2 / R2 are buttons. */
 static const signed char map_muos_brick[BI_COUNT] = {
-    /* F1 / F2 are what MustardOS calls L3 / R3 (the Brick has no sticks to click) */
+    /* UP DN LT RT  A  B  X  Y  L1 R1 L2  R2 SEL STA MENU F1  F2  L3  R3  HOME
+     * F1 / F2 are what MustardOS calls L3 / R3 (the Brick has no sticks to click) */
     -1, -1, -1, -1, 5, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, -1, -1, -1};
 static const signed char map_muos_brickpro[BI_COUNT] = {
     /* F1 / F2 come first as 0 / 1; 2 / 3 are volume down / up (left to MustardOS);
      * 4 is HOME; 16 / 17 the stick clicks */
     -1, -1, -1, -1, 6, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 16, 17, 4};
 
-/* what each pad's axes are */
-enum { AX_NONE, AX_L2, AX_R2, AX_LX, AX_LY, AX_RX, AX_RY };
-#define NAXES 6
+/* what each pad's axes are: the Brick Pro's sticks */
+enum { AX_NONE, AX_LX, AX_LY, AX_RX, AX_RY };
+#define NAXES 4
 static const unsigned char pad_axes[BI_PAD_KINDS][NAXES] = {
-    [BI_PAD_TRIMUI] = {AX_LX, AX_LY, AX_L2, AX_RX, AX_RY, AX_R2},
     [BI_PAD_MUOS_BRICK] = {AX_NONE},
     [BI_PAD_MUOS_BRICKPRO] = {AX_LX, AX_LY, AX_RX, AX_RY},
 };
@@ -52,7 +45,6 @@ static struct {
 static int npads;
 
 static int hat_state = -1;
-static int trig_down[2];
 static float stick_v[2][2];
 
 static int read_line(const char *path, char *buf, int n)
@@ -68,30 +60,18 @@ static int read_line(const char *path, char *buf, int n)
     return buf[0] != 0;
 }
 
-int bi_is_mustardos(void) { return access("/opt/muos", F_OK) == 0; }
-
-/* the device as the firmware names it, without a controller: 1 Brick Pro, 0 not, -1 unknown */
-static int firmware_says_brickpro(void)
+/* the device as MustardOS names its board, without a controller: 1 Brick Pro, 0 not, -1 unknown */
+static int board_says_brickpro(void)
 {
     char b[64];
     if (read_line("/opt/muos/device/config/board/name", b, sizeof b))
         return strstr(b, "pro") != NULL;
-    const char *d = getenv("DEVICE"); /* TrimUI OS: brick, brickpro */
-    if (d && *d)
-        return strcasecmp(d, "brickpro") == 0;
-    const char *m = getenv("TRIMUI_MODEL");
-    if (m && strcasestr(m, "brick"))
-        return strcasestr(m, "pro") != NULL;
     return -1;
 }
 
 void bi_init(const char *prefix)
 {
-    const signed char *src[BI_PAD_KINDS] = {
-        firmware_says_brickpro() == 1 ? map_trimui_brickpro : map_trimui_brick,
-        map_muos_brick,
-        map_muos_brickpro,
-    };
+    const signed char *src[BI_PAD_KINDS] = {map_muos_brick, map_muos_brickpro};
     for (int p = 0; p < BI_PAD_KINDS; p++) {
         for (int i = 0; i < NBTN; i++)
             joy_map[p][i] = BI_NONE;
@@ -99,7 +79,7 @@ void bi_init(const char *prefix)
             if (src[p][b] >= 0)
                 joy_map[p][(int)src[p][b]] = b;
     }
-    /* <prefix>_JOYMAP=A=1,B=0,...: another firmware's numbers, for every pad */
+    /* <prefix>_JOYMAP=A=1,B=0,...: other button numbers, for every pad */
     char name[64];
     snprintf(name, sizeof name, "%s_JOYMAP", prefix ? prefix : "APP");
     const char *m = getenv(name);
@@ -129,16 +109,17 @@ static int guid_u16(SDL_Joystick *j, int at)
     return g.data[at] | g.data[at + 1] << 8;
 }
 
+/* muOS-Keys (vendor 0x756d, "mu"; product 2 Brick, 3 Brick Pro), or -1 for any other controller */
 static int kind_of(SDL_Joystick *j)
 {
     const char *name = SDL_JoystickName(j);
     if (!(name && strcasestr(name, "muos")) && guid_u16(j, 4) != 0x756d)
-        return BI_PAD_TRIMUI;
+        return -1;
     switch (guid_u16(j, 8)) {
     case 2: return BI_PAD_MUOS_BRICK;
     case 3: return BI_PAD_MUOS_BRICKPRO;
     }
-    int pro = firmware_says_brickpro();
+    int pro = board_says_brickpro();
     if (pro >= 0)
         return pro ? BI_PAD_MUOS_BRICKPRO : BI_PAD_MUOS_BRICK;
     return SDL_JoystickNumButtons(j) > 17 ? BI_PAD_MUOS_BRICKPRO : BI_PAD_MUOS_BRICK;
@@ -161,33 +142,27 @@ void bi_open_joysticks(void)
         int kind = kind_of(j);
         if (npads < MAX_PADS)
             pads[npads].id = id, pads[npads].kind = kind, npads++;
-        fprintf(stderr, "controller %d: %s (%04x:%04x), %d buttons, %d axes, %d hats: %s numbering\n", i,
+        fprintf(stderr, "controller %d: %s (%04x:%04x), %d buttons, %d axes, %d hats: %s\n", i,
                 SDL_JoystickName(j), guid_u16(j, 4), guid_u16(j, 8), SDL_JoystickNumButtons(j),
-                SDL_JoystickNumAxes(j), SDL_JoystickNumHats(j), pad_names[kind]);
+                SDL_JoystickNumAxes(j), SDL_JoystickNumHats(j), kind >= 0 ? pad_names[kind] : "not read");
     }
 }
 
-/* the map an event uses, or -1 to ignore it */
+/* the map an event uses, or -1 to ignore it (not a muOS-Keys controller) */
 static int event_pad(SDL_JoystickID id)
 {
-    int muos = 0, kind = -1;
-    for (int i = 0; i < npads; i++) {
-        muos |= pads[i].kind != BI_PAD_TRIMUI;
+    for (int i = 0; i < npads; i++)
         if (pads[i].id == id)
-            kind = pads[i].kind;
-    }
-    if (kind < 0)
-        return BI_PAD_TRIMUI;
-    return muos && kind == BI_PAD_TRIMUI ? -1 : kind;
+            return pads[i].kind;
+    return -1;
 }
 
 int bi_pad_kind(void)
 {
-    int k = -1;
     for (int i = 0; i < npads; i++)
-        if (pads[i].kind != BI_PAD_TRIMUI || k < 0)
-            k = pads[i].kind;
-    return k;
+        if (pads[i].kind >= 0)
+            return pads[i].kind;
+    return -1;
 }
 
 int bi_is_brickpro(void)
@@ -195,7 +170,7 @@ int bi_is_brickpro(void)
     for (int i = 0; i < npads; i++)
         if (pads[i].kind == BI_PAD_MUOS_BRICKPRO)
             return 1;
-    return firmware_says_brickpro() == 1;
+    return board_says_brickpro() == 1;
 }
 
 /* -1..1 with the centre's dead zone removed */
@@ -247,13 +222,7 @@ int bi_event(const SDL_Event *e, BiEvent *out, int max)
         if (pad < 0 || e->jaxis.axis >= NAXES)
             break;
         int role = pad_axes[pad][e->jaxis.axis], v = e->jaxis.value;
-        if (role == AX_L2 || role == AX_R2) { /* down past halfway, up below a quarter */
-            int t = role == AX_R2, down = trig_down[t] ? v > 8192 : v > 16384;
-            if (down != trig_down[t]) {
-                trig_down[t] = down;
-                n = push(out, n, max, (BiEvent){.type = BI_EV_BUTTON, .button = t ? BI_R2 : BI_L2, .down = down});
-            }
-        } else if (role >= AX_LX) {
+        if (role >= AX_LX) {
             int s = role >= AX_RX, yax = role == AX_LY || role == AX_RY;
             float val = stick_value(v);
             if (yax)
