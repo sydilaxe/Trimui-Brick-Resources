@@ -1,8 +1,9 @@
 # Input: buttons, sticks, triggers, switch
 
-All four combinations (TrimUI OS or MustardOS, Brick or Brick Pro) show up in SDL2 as a joystick.
-The numbers differ between them, so detect which one you have at run time. Code:
-[`src/brick_input.h`](../src/brick_input.h).
+Under MustardOS the buttons show up in SDL2 as its `muOS-Keys` joystick, numbered differently on
+the Brick and the Brick Pro, so detect which one you have at run time. Code:
+[`src/brick_input.h`](../src/brick_input.h), which reads only muOS-Keys. TrimUI OS's own numbering is
+kept below for reference only: the apps no longer build for TrimUI OS or read its controller.
 
 The Brick Hammer reads exactly as the Brick (same MustardOS board `tui-brick`, product id 2, same
 builds in the sydilaxe apps) **[app] [muOS]**.
@@ -32,11 +33,13 @@ Read vendor and product from the GUID (`g.data[4] | g.data[5] << 8`, `g.data[8] 
 Fallbacks, in order **[app]**:
 
 1. MustardOS: `/opt/muos/device/config/board/name` is `tui-brick` or `tui-brick-pro`.
-2. TrimUI OS: the `DEVICE` env var is `brick` or `brickpro` **[NextUI]**; `TRIMUI_MODEL` names the model.
-3. Last resort: more than 17 buttons means Brick Pro.
+2. Last resort: more than 17 buttons means Brick Pro.
+
+(TrimUI OS, for reference: the `DEVICE` env var is `brick` or `brickpro` **[NextUI]**; `TRIMUI_MODEL`
+names the model.)
 
 **Under MustardOS both controllers exist**: muOS-Keys and the TrimUI gamepad underneath it. Read only
-muOS-Keys when it is present, or every press arrives twice **[app]**.
+muOS-Keys, or every press arrives twice **[app]**.
 
 Set `SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS` to `"1"` and handle `SDL_JOYDEVICEADDED` /
 `SDL_JOYDEVICEREMOVED` **[app]**.
