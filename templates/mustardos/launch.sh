@@ -1,6 +1,5 @@
 #!/bin/sh
-# Launcher shared by both packages: TrimUI OS runs it directly (Apps/<Name>/launch.sh),
-# MustardOS through mux_launch.sh. Keeps all four cores online at full speed while the app
+# The app's launcher, run by MustardOS through mux_launch.sh. Keeps all four cores online at full speed while the app
 # runs, and puts the governor back after.
 APP=myapp
 cd "$(dirname "$0")"
@@ -12,8 +11,8 @@ for c in 0 1 2 3; do
 done
 echo performance > $CPU/cpu0/cpufreq/scaling_governor 2>/dev/null
 
-# TrimUI OS keeps its SDL2 in /usr/trimui/lib; MustardOS's SETUP_APP has already put its own first
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/trimui/lib:/usr/lib"
+# MustardOS's SETUP_APP has already put its own SDL2 first
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib"
 
 # Optional settings (remove the # to use one; the prefix is the app's own):
 # export SK_BUFFER=1024        # bigger audio buffers if it crackles (512 by default)

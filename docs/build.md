@@ -60,25 +60,22 @@ For a desktop build, `sdl2-config --cflags` gives `-I/usr/include/SDL2`; strip t
 
 See [`examples/skeleton/Makefile`](../examples/skeleton/Makefile) (`make package`):
 
-- TrimUI OS: `<Name>-trimui.zip` holding `Apps/<Name>/` (binary, `launch.sh`, `config.json`, data).
-  Unzip at the card's root.
-- MustardOS: `<Name>-mustardos.muxapp`, a zip holding `<Name>/` (the same files plus
+- Only MustardOS is built for: no TrimUI OS or Knulli packages **[app]**.
+- `<Name>-mustardos.muxapp`, a zip holding `<Name>/` (binary, `launch.sh`, data, plus
   `mux_launch.sh`, `wake_screen.sh`, `glyph/<icon>.svg`). Copy into `ARCHIVE/`, install from the
   Archive Manager.
 - MustardOS's Archive Manager refuses absolute paths, `..` and links: check with
   `unzip -Z1` / `unzip -Zl` in CI **[app]**.
-- Never put `mux_launch.sh` in the TrimUI OS zip.
 
 ## CI **[app]**
 
 The sydilaxe apps build in GitHub Actions on `ubuntu-latest`: `pip install ziglang==0.14.1`,
 `sh -n` every shell script, `make package VERSION=<tag>`, check the archives' contents with `unzip -l`
-and `file` (`ARM aarch64`), run host tests, and publish the zip and `.muxapp` to the release on a
+and `file` (`ARM aarch64`), run host tests, and publish the `.muxapp` to the release on a
 `v*` tag.
 
 ## Running on the device
 
-- SSH as `root` (TrimUI OS: turn on its SSH server; MustardOS: Web Services > Secure Shell).
-- `scp` the folder to `/mnt/SDCARD/Apps/<Name>/` (TrimUI OS) or the card's
-  `MUOS/application/<Name>/` (MustardOS), or `make install SD=/path/to/mounted/card`.
+- SSH as `root` (MustardOS: Web Services > Secure Shell).
+- `scp` the folder to the card's `MUOS/application/<Name>/`, or `make install SD=/path/to/mounted/card`.
 - Read `log.txt` and `sysinfo.txt` in the app folder afterwards.
