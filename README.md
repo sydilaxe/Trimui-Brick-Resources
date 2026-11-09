@@ -25,20 +25,19 @@ Each fact is tagged with where it came from (see [Sources](#sources-and-confiden
 
 ## Drop-in code (no need to open the app repos)
 
-Everything here builds as is: `cd examples/skeleton && make package` gives a TrimUI OS zip and a
-MustardOS `.muxapp` for all three devices (the skeleton itself has not been run on hardware yet;
+Everything here builds as is: `cd examples/skeleton && make package` gives a MustardOS `.muxapp`
+for all three devices (the apps build only for MustardOS) (the skeleton itself has not been run on hardware yet;
 the code it is built from ships in the sydilaxe apps). `tests/run.sh` runs the host tests.
 
 | File | What it is |
 | --- | --- |
-| [`examples/skeleton/`](examples/skeleton) | A working app: screen (opaque, MustardOS wake), input, 48 kHz audio with USB hot-plug, LEDs, USB MIDI, log; plus its Makefile (zig, SDL2 stub, both packages) |
+| [`examples/skeleton/`](examples/skeleton) | A working app: screen (opaque, MustardOS wake), input, 48 kHz audio with USB hot-plug, LEDs, USB MIDI, log; plus its Makefile (zig, SDL2 stub, the `.muxapp`) |
 | [`src/brick_input.c`](src/brick_input.c), [`.h`](src/brick_input.h) | Buttons, sticks and side switch for all four firmware/device pairs, detected at run time |
 | [`src/ringleds.c`](src/ringleds.c), [`.h`](src/ringleds.h) | Brick Pro: all 22 LEDs via `frame_hex` (level meter, stick rings, beat), saved and restored |
 | [`src/brick_zones.c`](src/brick_zones.c), [`.h`](src/brick_zones.h) | Brick / Hammer: the named LED zones (F1, F2, top bar, shoulders), saved and restored |
 | [`src/brick_midi.c`](src/brick_midi.c), [`.h`](src/brick_midi.h) | USB MIDI through ALSA raw MIDI: hot-plug, parser, send to all ports |
 | [`src/perflog.c`](src/perflog.c), [`.h`](src/perflog.h) | Performance log: audio load, dropouts, clicks, CPU, with tuning hints |
-| [`templates/mustardos/`](templates/mustardos) | `mux_launch.sh`, `wake_screen.sh`, a list glyph |
-| [`templates/trimui-os/`](templates/trimui-os) | `launch.sh` (governor, update loop) and `config.json` |
+| [`templates/mustardos/`](templates/mustardos) | `mux_launch.sh`, `launch.sh` (governor, update loop), `wake_screen.sh`, a list glyph |
 | [`third_party/SDL2-2.30.9-headers/`](third_party/SDL2-2.30.9-headers) | SDL2 headers to build against |
 | [`tools/mksdlstub.py`](tools/mksdlstub.py) | Makes the link-time SDL2 stand-in |
 | [`tools/sysinfo.sh`](tools/sysinfo.sh) | System and sound-path report, sampled while the app runs |

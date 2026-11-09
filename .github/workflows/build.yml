@@ -20,6 +20,7 @@ jobs:
           make -C tools
           make -C examples/skeleton package
           file tools/build/evdump tools/build/joydump examples/skeleton/build/trimui/skeleton | tee /dev/stderr | grep -c "ARM aarch64" | grep -qx 3
-          # the MustardOS package has mux_launch.sh; the TrimUI OS one must not
-          unzip -l examples/skeleton/build/Skeleton-mustardos.muxapp | grep -q "Skeleton/mux_launch.sh$"
-          if unzip -l examples/skeleton/build/Skeleton-trimui.zip | grep -q mux_launch.sh; then exit 1; fi
+          # the MustardOS package (the only one built): the binary and its launchers
+          for f in skeleton launch.sh mux_launch.sh wake_screen.sh sysinfo.sh glyph/skeleton.svg; do
+            unzip -l examples/skeleton/build/Skeleton-mustardos.muxapp | grep -q "Skeleton/$f$" || { echo "::error::no $f"; exit 1; }
+          done

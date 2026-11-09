@@ -13,7 +13,7 @@
 ```
 <Name>/
   mux_launch.sh      MustardOS runs this (header comments set help, icon, name)
-  launch.sh          the same launcher the TrimUI OS package uses
+  launch.sh          the launcher mux_launch.sh runs (governor, update loop)
   wake_screen.sh     wakes the Brick Pro's screen (see below)
   glyph/<icon>.svg   list icon (80x80, white strokes on transparent)
   <binary>, data, ...
@@ -122,7 +122,6 @@ first MustardOS build ran it unquoted through `sh -c` and the wake never ran.
 
 ## Self-updating apps **[app]**
 
-The sydilaxe apps update from their GitHub releases. Each build fetches its own asset: the `.muxapp`
-when `mux_launch.sh` is in its folder, else the TrimUI OS zip. Keep `mux_launch.sh` out of the TrimUI
-OS zip so the test stays true. Exit with status 75 after updating and have `launch.sh` loop on 75 to
+The sydilaxe apps update from their GitHub releases. Each build fetches its own `.muxapp` (the
+only packages released). Exit with status 75 after updating and have `launch.sh` loop on 75 to
 start the new version.

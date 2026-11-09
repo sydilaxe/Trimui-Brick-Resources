@@ -4,8 +4,7 @@
 # GRID: Skeleton
 
 # MustardOS starts an app with this script, passing the app's folder. It sets up the app the way
-# MustardOS's own apps are set up, then runs launch.sh, which the TrimUI OS package shares.
-# Keep this file out of the TrimUI OS package: an app can tell the two apart by it.
+# MustardOS's own apps are set up, then runs launch.sh.
 APP=skeleton
 
 APP_DIR="${1:-$(dirname "$0")}"

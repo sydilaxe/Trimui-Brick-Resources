@@ -39,9 +39,9 @@ on. To start a new app, copy `examples/skeleton/` and the `src/` files it uses.
     The top USB-C port is the host port.
 11. **Build with zig** for `aarch64-linux-gnu.2.28 -mcpu=cortex_a53` against a stub `libSDL2-2.0.so.0`;
     the device's own SDL2 is loaded at run time. [docs/build.md](docs/build.md)
-12. **One binary can serve every device and both firmwares.** Package it twice: a TrimUI OS zip
-    (`Apps/<Name>/`) and a MustardOS `.muxapp` (adds `mux_launch.sh`). Apps can tell which package
-    they are in by checking for `mux_launch.sh` in their folder.
+12. **Build only for MustardOS.** The sydilaxe TrimUI apps ship only MustardOS `.muxapp` packages
+    for the Brick and Brick Pro: no TrimUI OS or Knulli builds. One binary can serve every device;
+    package it as `<Name>-mustardos.muxapp` (`<Name>/` with `mux_launch.sh`).
 
 ## Keeping this repo right
 
