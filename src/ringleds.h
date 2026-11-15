@@ -43,6 +43,11 @@ void ringleds_update(float lx, float ly, uint32_t lcol, float rx, float ry, uint
  * RINGLEDS_BEAT (the default) shows the beat there, as above */
 #define RINGLEDS_BEAT 0xffffffffu
 void ringleds_shoulders(uint32_t l1, uint32_t l2, uint32_t r1, uint32_t r2);
+/* main thread: the app's own top bar (8 colours, left to right) and / or
+ * rings (8: the left ring's 4 then the right's, each upper left, lower left,
+ * lower right, upper right) from the next ringleds_update on, in place of the
+ * level meter and the stick pointers; NULL gives those back */
+void ringleds_custom(const uint32_t *bar8, const uint32_t *rings8);
 /* a colour at an intensity 0..1, on the same curve the LEDs use */
 uint32_t ringleds_glow(uint32_t c, float t);
 void ringleds_close(void);

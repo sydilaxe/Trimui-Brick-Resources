@@ -32,10 +32,20 @@ ALSA MIDI in PipeWire (`alsa.midi = true`) **[muOS]**.
 
 ## Settings that work **[app]**
 
-- **Format**: `AUDIO_S16SYS`, 2 channels, 48000 Hz. Let SDL convert if the device wants otherwise
+**For USB audio in and out, use [`lib/brickio`](../lib/brickio/README.md)** (TrimFX's module, shared by the
+apps). It does what this page describes and more: the USB interface first, opened direct through
+`plughw` (latency down from ~90 ms to ~25 ms), 32-bit float at the interface's own resolution and
+channels, real-time threads, a buffer that starts at 256 frames and grows only after dropouts, the
+input's clock drift followed, hot-plug and a watchdog. Its README has the latency table and the API.
+`examples/skeleton` uses it.
+
+- **Format**: `AUDIO_S16SYS`, 2 channels, 48000 Hz, in the older apps; `lib/brickio` uses 32-bit float
+  (`AUDIO_F32SYS`), so a 24-bit interface keeps its bits. Let SDL convert if the device wants otherwise
   (pass `0` for `allowed_changes` to `SDL_OpenAudioDevice`).
 - **Buffer**: 512 frames (~10.7 ms) is the default in Columbia Street, HI5 and Jaffedrone; 1024 in
   RadioScan (it decodes streams). Offer `<APP>_BUFFER=1024` for crackles and `<APP>_RATE=44100`.
+  `lib/brickio` starts at 256 on a USB interface opened direct, matches the interface's own period if
+  that is longer, and grows a step after 3 dropouts in 20 s.
 - **Render ahead**: make the sound on your own thread into a ring buffer and let the SDL callback
   only copy out. The callback's timing on PipeWire is uneven.
 - **Real-time priority**: `SCHED_FIFO` for the render thread (Jaffedrone uses 45 for the voices;
@@ -89,6 +99,11 @@ records the sound path, PipeWire's graph and xruns every 10 s while the app runs
 
 ## USB audio **[app]**
 
+[`lib/brickio/usbaudio`](../lib/brickio/usbaudio.h) does all of the below, and the shared (`dmix`/`dsnoop`)
+path's 1024-frame periods are bypassed by opening the card as `plughw:CARD=<id>` (checked in the
+kernel's `hw_params`, with the shared path as the fallback). The notes here are for apps that open
+SDL audio themselves.
+
 - The **top** USB-C port is the host port; the bottom one charges. It gives about 500 mA; use a powered
   hub for hungry devices.
 - Class-compliant interfaces and DACs work. Pick one by name: look for `usb`, `uac` or `dac` in
@@ -99,6 +114,10 @@ records the sound path, PipeWire's graph and xruns every 10 s while the app runs
 - Give users `<APP>_AUDIO=internal` and `<APP>_AUDIO=<part of a name>`.
 
 ## USB MIDI **[app]**
+
+[`lib/brickio/midi`](../lib/brickio/midi.h) does this: a reader thread parses each message as it arrives
+(notes, CCs, program change, pitch bend, aftertouch, clock and transport), queues it with its time and
+wakes the app, and finds devices plugged in later. `src/brick_midi` is the older, standalone parser.
 
 - ALSA raw MIDI: scan `/dev/snd` for `midiC*D*` and open them `O_RDWR | O_NONBLOCK`; rescan every
   second or two to catch hot-plugged devices.

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Host tests: builds the LED drivers for this computer and runs them against a stand-in
 # /sys/class/led_anim folder, as the device's driver would be found by an app (MustardOS's
-# brightness at 0, a user's colours and effects).
+# brightness at 0, a user's colours and effects); the MIDI parser; and lib/brickio's input ring.
 set -e
 here=$(cd "$(dirname "$0")" && pwd)
 work=$(mktemp -d)
@@ -20,3 +20,8 @@ cc -std=gnu11 -O1 -Wall -Wextra -I"$here/../src" -o "$work/led_test" "$here/led_
 (cd "$work" && ./led_test "$work/led_anim")
 cc -std=gnu11 -O1 -Wall -Wextra -o "$work/midi_test" "$here/midi_test.c" -lpthread
 "$work/midi_test"
+# lib/brickio's input ring: jitter, bursts, clock drift, a stall, multichannel and mono, with no gaps
+# or clicks (under the address and undefined-behaviour sanitizers, as in the apps)
+cc -std=gnu11 -O1 -g -Wall -Wextra -fsanitize=address,undefined -o "$work/test_aring" \
+    "$here/../lib/brickio/tests/test_aring.c" "$here/../lib/brickio/aring.c" -lm
+"$work/test_aring"

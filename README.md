@@ -31,11 +31,12 @@ the code it is built from ships in the sydilaxe apps). `tests/run.sh` runs the h
 
 | File | What it is |
 | --- | --- |
-| [`examples/skeleton/`](examples/skeleton) | A working app: screen (opaque, MustardOS wake), input, 48 kHz audio with USB hot-plug, LEDs, USB MIDI, log; plus its Makefile (zig, SDL2 stub, the `.muxapp`) |
+| [`examples/skeleton/`](examples/skeleton) | A working app: screen (opaque, MustardOS wake), input, USB audio in and out and USB MIDI through `lib/brickio`, LEDs, log; plus its Makefile (zig, SDL2 stub, the `.muxapp`) |
 | [`src/brick_input.c`](src/brick_input.c), [`.h`](src/brick_input.h) | Buttons, sticks and side switch for all four firmware/device pairs, detected at run time |
 | [`src/ringleds.c`](src/ringleds.c), [`.h`](src/ringleds.h) | Brick Pro: all 22 LEDs via `frame_hex` (level meter, stick rings, beat), saved and restored |
 | [`src/brick_zones.c`](src/brick_zones.c), [`.h`](src/brick_zones.h) | Brick / Hammer: the named LED zones (F1, F2, top bar, shoulders), saved and restored |
-| [`src/brick_midi.c`](src/brick_midi.c), [`.h`](src/brick_midi.h) | USB MIDI through ALSA raw MIDI: hot-plug, parser, send to all ports |
+| [`lib/brickio/`](lib/brickio) | **USB audio and MIDI** (TrimFX's module, shared by the apps): USB interface first, direct low-latency open, 24-bit float, native channels and pairs, separate in and out devices with drift followed, real-time threads, AUTO buffer, watchdog, speaker guard, USB MIDI with a reader thread. [README](lib/brickio/README.md) |
+| [`src/brick_midi.c`](src/brick_midi.c), [`.h`](src/brick_midi.h) | USB MIDI through ALSA raw MIDI: hot-plug, parser, send to all ports (older; `lib/brickio/midi` supersedes it) |
 | [`src/perflog.c`](src/perflog.c), [`.h`](src/perflog.h) | Performance log: audio load, dropouts, clicks, CPU, with tuning hints |
 | [`templates/mustardos/`](templates/mustardos) | `mux_launch.sh`, `launch.sh` (governor, update loop), `wake_screen.sh`, a list glyph |
 | [`third_party/SDL2-2.30.9-headers/`](third_party/SDL2-2.30.9-headers) | SDL2 headers to build against |
