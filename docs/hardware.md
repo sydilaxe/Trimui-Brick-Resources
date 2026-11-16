@@ -44,12 +44,19 @@ Measured with [`tools/probe-gadget.sh`](../tools/probe-gadget.sh) and
 | Gadgets | configfs at `/sys/kernel/config/usb_gadget` (`CONFIG_USB_CONFIGFS`, `CONFIG_USB_LIBCOMPOSITE`, both built in) |
 | Gadget functions built in | **FunctionFS** (`ffs`), mass storage, MTP, PTP |
 | Not in the kernel | **USB audio (`uac1`, `uac2`)** and **USB MIDI (`midi`)**: a Brick can't be a standard USB sound card or MIDI device through the kernel's own functions |
-| Isochronous endpoints through FunctionFS | FunctionFS **accepts** the descriptors, but the controller **wouldn't bind** one isochronous endpoint each way at 294 bytes a millisecond (`write` to `UDC` failed with error 524, `ENOTSUPP`). Smaller and one-way variants: [open question](open-questions.md) |
+| Isochronous endpoints through FunctionFS | **One direction binds; both directions don't.** FunctionFS accepts the descriptors. One isochronous endpoint, OUT or IN, binds at 64, 196 and 294 bytes a millisecond (294 is 48 kHz stereo 24-bit). One each way doesn't bind, at 196 or 294 bytes (`write` to `UDC` fails with error 524, `ENOTSUPP`). Bulk, one each way (the clock link's kind), binds |
 
-So two Bricks exchange data over the bottom port through **FunctionFS with bulk endpoints**, as the
-clock link does. Isochronous transfers (what a standard USB audio device needs) aren't available at
-the size tried. Without them, audio between Bricks needs a protocol of the apps' own on bulk endpoints,
-and only apps that speak it see each other (not a computer's sound settings) **[probe]**.
+What this means for audio between Bricks **[probe]**:
+
+- **Both ways at once needs bulk endpoints**, as the clock link uses: audio there is a protocol of the
+  apps' own, and only apps that speak it see each other (not a computer's sound settings).
+- **One way can be isochronous** (what USB audio devices use: a fixed slot every millisecond). The
+  kernel has no USB audio gadget, so a standard sound card would have to be described from user space
+  through FunctionFS. Whether FunctionFS on this kernel takes USB audio's class descriptors and
+  alternate settings, and whether isochronous and bulk endpoints bind together, is
+  [still open](open-questions.md).
+- "Binds" means the controller took the gadget, measured with nothing in the bottom port. No data
+  has been sent over an isochronous endpoint yet.
 
 Setting a FunctionFS gadget up and taking it down, in the order the clock link uses (it works on every
 start of the apps) **[app]**:
