@@ -12,12 +12,11 @@ on. To start a new app, copy `examples/skeleton/` and the `src/` files it uses.
    in its GameController mapping depending on the user's layout setting, so the same press arrives
    as a different button. The raw numbers are fixed. Tables: [docs/input.md](docs/input.md),
    code: [src/brick_input.h](src/brick_input.h).
-2. **The numbering differs per firmware and per device.** TrimUI OS's own controller and
-   MustardOS's `muOS-Keys` controller use different numbers, and the Brick and Brick Pro differ under
-   MustardOS. Detect at run time: muOS-Keys has vendor `0x756d`, product 2 (Brick) or 3 (Brick Pro).
-   When muOS-Keys is present, ignore the other controller or every press arrives twice.
-3. **The d-pad is hat 0** on every firmware. L2/R2 are axes 2 and 5 on TrimUI OS but buttons on
-   MustardOS.
+2. **Read only MustardOS's `muOS-Keys` controller.** Its numbering differs between the Brick and
+   the Brick Pro: detect at run time (vendor `0x756d`, product 2 Brick, 3 Brick Pro). The TrimUI's
+   own gamepad is there underneath it: ignore it, or every press arrives twice. The apps have no
+   TrimUI OS input code any more; docs/input.md keeps TrimUI OS's numbering only as reference.
+3. **The d-pad is hat 0**; L2/R2 are buttons.
 4. **Draw opaque pixels.** MustardOS shows the alpha channel: a surface drawn with alpha 0 shows as a
    black screen. OR `0xFF000000` into every pixel before presenting. [docs/mustardos.md](docs/mustardos.md)
 5. **The Brick Pro's screen can stay dark under MustardOS** after the window opens. Run the

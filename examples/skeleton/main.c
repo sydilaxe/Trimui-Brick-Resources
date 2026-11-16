@@ -1,5 +1,5 @@
 /* A starting point for an audio app on the TrimUI Brick, Brick Hammer and
- * Brick Pro, on TrimUI OS or MustardOS. One binary for all of them. It puts
+ * Brick Pro, on MustardOS. One binary for all of them. It puts
  * together what the sydilaxe apps learned the hard way:
  *
  *   screen   a 1024x768 window; the picture is drawn into a software surface
@@ -257,8 +257,7 @@ int main(void)
     bi_open_joysticks();
     int pro = bi_is_brickpro();
     int leds = pro ? ringleds_open("SK", 1) : bz_open("SK");
-    perf_log("START", "%s on %s, LEDs %s", pro ? "Brick Pro" : "Brick / Brick Hammer",
-             bi_is_mustardos() ? "MustardOS" : "TrimUI OS", leds ? "on" : "off");
+    perf_log("START", "%s on MustardOS, LEDs %s", pro ? "Brick Pro" : "Brick / Brick Hammer", leds ? "on" : "off");
 
     audio_open(pick_output());
     bm_start(on_midi, NULL, -1);

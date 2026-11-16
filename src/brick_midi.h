@@ -1,6 +1,6 @@
 /* USB MIDI on the TrimUI (the USB host port is the Brick's top USB-C),
  * through ALSA's raw MIDI ports (/dev/snd/midiC*D*): nothing else is needed
- * on the device, on TrimUI OS or MustardOS. Ports are found as they are
+ * on the device under MustardOS. Ports are found as they are
  * plugged in (a rescan each second) and dropped when they go away.
  *
  * From the sydilaxe apps' midi.c, without their engines: a thread of its own

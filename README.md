@@ -1,8 +1,8 @@
 # TrimUI Brick / Brick Pro: resources for audio app builds
 
 Hardware facts that are hard to find elsewhere, for agents and people building audio apps for the
-TrimUI **Brick**, **Brick Hammer** and **Brick Pro**, mainly on **MustardOS** (muOS), with TrimUI OS
-notes where they differ.
+TrimUI **Brick**, **Brick Hammer** and **Brick Pro**, on **MustardOS** (muOS). The apps and the code here
+are MustardOS only; a few TrimUI OS notes are kept as reference.
 
 Most of this was taken from code that already runs on the devices: the four sydilaxe TrimUI apps
 (Columbia Street, HI5, RadioScan, Jaffedrone), MustardOS's own device files and scripts

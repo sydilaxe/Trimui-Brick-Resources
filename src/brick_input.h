@@ -1,6 +1,7 @@
-/* The TrimUI Brick's, Brick Hammer's and Brick Pro's buttons and sticks, on
- * TrimUI OS or MustardOS, through SDL2's raw joystick API. One binary serves
- * all four: the controller is identified at run time. Taken from the input
+/* The TrimUI Brick's, Brick Hammer's and Brick Pro's buttons and sticks under
+ * MustardOS, through SDL2's raw joystick API: MustardOS's "muOS-Keys"
+ * controller, whose numbering differs between the Brick and the Brick Pro.
+ * One binary serves all three: the controller is identified at run time. Taken from the input
  * code of the sydilaxe TrimUI apps (RadioScan, Columbia Street, HI5,
  * Jaffedrone); see docs/input.md for the tables and where they come from.
  *
@@ -31,7 +32,6 @@ typedef enum {
 } BiButton;
 
 typedef enum {
-    BI_PAD_TRIMUI,          /* TrimUI OS's own gamepad (either device) */
     BI_PAD_MUOS_BRICK,      /* MustardOS muOS-Keys, product 2: Brick, Brick Hammer */
     BI_PAD_MUOS_BRICKPRO,   /* MustardOS muOS-Keys, product 3: Brick Pro */
     BI_PAD_KINDS
@@ -54,15 +54,13 @@ void bi_init(const char *prefix);
 /* opens every joystick not yet open; logs each to stderr */
 void bi_open_joysticks(void);
 /* turns one SDL event into up to max button/stick events; returns how many.
- * Handles SDL_JOYDEVICEREMOVED itself. Ignores the TrimUI gamepad while a
- * muOS-Keys controller is open (else every press would arrive twice). */
+ * Handles SDL_JOYDEVICEREMOVED itself. Reads only muOS-Keys: any other
+ * controller (the TrimUI's own gamepad underneath it) is ignored, else every
+ * press would arrive twice. */
 int bi_event(const SDL_Event *e, BiEvent *out, int max);
-/* 1 if this is a Brick Pro: from the controller, else MustardOS's board
- * name, else TrimUI OS's DEVICE / TRIMUI_MODEL */
+/* 1 if this is a Brick Pro: from the controller, else MustardOS's board name */
 int bi_is_brickpro(void);
-/* 1 if running under MustardOS (/opt/muos exists) */
-int bi_is_mustardos(void);
-/* the kind of the first open controller that is read, or -1 */
+/* the kind of the first muOS-Keys controller open, or -1 */
 int bi_pad_kind(void);
 /* the side switch (FN switch, GPIO 243): 0 up, 1 down, -1 unreadable.
  * Exports the GPIO if nobody has; bi_switch_close unexports it again. */
