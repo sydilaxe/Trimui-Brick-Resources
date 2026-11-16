@@ -19,13 +19,55 @@ see [open-questions.md](open-questions.md) and [brick-hammer-mapping.md](brick-h
 | LEDs | 14 addressable RGB **[LED'oh]** | 22 addressable RGB (23 slots) **[app] [muOS]** |
 | Speaker | mono **[muOS]** | mono **[muOS]** |
 | Audio out | 3.5 mm headphone jack | same |
-| USB | two USB-C: **top = host** (MIDI, audio, hubs), bottom = charging **[app]** | check on the device |
+| USB | two USB-C: **top = host** (MIDI, audio, hubs), bottom = charging and a USB **device** port (see [below](#the-bottom-usb-port-as-a-device)) **[app] [probe]** | check on the device |
 | Wi-Fi | xradio (`xradio_wlan`), `wlan0` **[muOS]** | same |
 | Bluetooth | yes (4.2) **[muOS] [web]** | same |
 | Rumble | GPIO 227 **[muOS]** | GPIO 227, limit ~2.5 V **[NextUI]** |
 | Kernel | Linux 4.9.191 (Allwinner BSP) **[muOS]** | same |
 
 The USB host port supplies about 500 mA; use a powered hub for anything hungrier **[app]**.
+
+## The bottom USB port as a device
+
+The bottom USB-C port charges, and it can also be a USB *device* (a gadget) for a host plugged into it.
+The sydilaxe apps' **clock link** uses this: a following Brick's bottom port shows up on the leading
+Brick's hub as a "TrimUI clock link" device, a FunctionFS vendor interface with one bulk OUT endpoint
+(the apps' `src/link.c`) **[app]**.
+
+Measured with [`tools/probe-gadget.sh`](../tools/probe-gadget.sh) and
+[`tools/probe-iso.c`](../tools/probe-iso.c) on a MustardOS Brick (muOS/2 NeXT, kernel 4.9.191 #535 of
+2024-10-09, `sun50iw10`), with nothing in the bottom port **[probe]**:
+
+| | Result |
+| --- | --- |
+| Device controller | `5100000.udc-controller` (in `/sys/class/udc`); `state not attached` with the port empty |
+| Gadgets | configfs at `/sys/kernel/config/usb_gadget` (`CONFIG_USB_CONFIGFS`, `CONFIG_USB_LIBCOMPOSITE`, both built in) |
+| Gadget functions built in | **FunctionFS** (`ffs`), mass storage, MTP, PTP |
+| Not in the kernel | **USB audio (`uac1`, `uac2`)** and **USB MIDI (`midi`)**: a Brick can't be a standard USB sound card or MIDI device through the kernel's own functions |
+| Isochronous endpoints through FunctionFS | FunctionFS **accepts** the descriptors, but the controller **wouldn't bind** one isochronous endpoint each way at 294 bytes a millisecond (`write` to `UDC` failed with error 524, `ENOTSUPP`). Smaller and one-way variants: [open question](open-questions.md) |
+
+So two Bricks exchange data over the bottom port through **FunctionFS with bulk endpoints**, as the
+clock link does. Isochronous transfers (what a standard USB audio device needs) aren't available at
+the size tried. Without them, audio between Bricks needs a protocol of the apps' own on bulk endpoints,
+and only apps that speak it see each other (not a computer's sound settings) **[probe]**.
+
+Setting a FunctionFS gadget up and taking it down, in the order the clock link uses (it works on every
+start of the apps) **[app]**:
+
+1. Make the gadget in configfs (ids, strings, `configs/c.1`), then `functions/ffs.<name>`.
+2. Mount it: `mount -t functionfs <name> <dir>`, open `<dir>/ep0`, write the descriptors and strings.
+3. Link the function into `configs/c.1`, then write the controller's name to the gadget's `UDC`.
+4. Taking it down: write an empty line to `UDC`, close the endpoints, `umount`, remove the mount
+   folder, unlink the function from the config, then `rmdir` the config, the function and the gadget.
+
+**Don't make and remove a bare FunctionFS instance** (`mkdir functions/ffs.<name>` then `rmdir` it,
+never mounted): the probe's first version did that, and each of its three runs on the device stopped
+right after making one, before it could report the removal. The cause isn't confirmed, but nothing
+that follows the order above has stopped **[probe]**.
+
+Only one gadget can hold the controller at a time: an app using the clock link and a probe (or another
+app's gadget) can't both bind. Check every gadget's `UDC` file under `/sys/kernel/config/usb_gadget`
+first.
 
 ## The software side
 

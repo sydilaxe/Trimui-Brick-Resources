@@ -1,5 +1,6 @@
 # The on-device probe tools, cross-compiled with zig for the TrimUI (aarch64, glibc 2.28):
-#   make           -> build/evdump (no SDL) and build/joydump (the device's SDL2)
+#   make           -> build/evdump (no SDL), build/joydump (the device's SDL2) and build/probe-iso
+#                     (with probe-gadget.sh: what the bottom USB port can be as a USB device)
 # Copy them to the device (scp build/* root@<ip>:/tmp/) and run them over SSH.
 
 ROOT    := ..
@@ -8,7 +9,7 @@ DEV_CC   = $(ZIG) cc -target aarch64-linux-gnu.2.28 -mcpu=cortex_a53
 SDL_INC := $(ROOT)/third_party/SDL2-2.30.9-headers
 CFLAGS  := -O2 -std=gnu11 -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers
 
-all: build/evdump build/joydump
+all: build/evdump build/joydump build/probe-iso
 
 build/evdump: evdump.c | build
 	$(DEV_CC) $(CFLAGS) -o $@ $< -s
@@ -16,6 +17,9 @@ build/evdump: evdump.c | build
 build/joydump: joydump.c $(ROOT)/src/brick_input.c build/sdl2/libSDL2-2.0.so.0 | build
 	$(DEV_CC) $(CFLAGS) -I$(SDL_INC) -I$(ROOT)/src -o $@ joydump.c $(ROOT)/src/brick_input.c \
 		build/sdl2/libSDL2-2.0.so.0 -lm -Wl,--allow-shlib-undefined -s
+
+build/probe-iso: probe-iso.c | build
+	$(DEV_CC) $(CFLAGS) -o $@ $< -s
 
 build/sdl2/libSDL2-2.0.so.0: mksdlstub.py joydump.c $(ROOT)/src/brick_input.c
 	@mkdir -p build/sdl2
