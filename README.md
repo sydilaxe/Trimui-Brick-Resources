@@ -43,6 +43,7 @@ the code it is built from ships in the sydilaxe apps). `tests/run.sh` runs the h
 | [`tools/mksdlstub.py`](tools/mksdlstub.py) | Makes the link-time SDL2 stand-in |
 | [`tools/sysinfo.sh`](tools/sysinfo.sh) | System and sound-path report, sampled while the app runs |
 | [`tools/led_probe.sh`](tools/led_probe.sh) | On the device: light LEDs one by one, check colour order, try each zone; restores after |
+| [`tools/probe-gadget.sh`](tools/probe-gadget.sh), [`tools/probe-iso.c`](tools/probe-iso.c) | On the device: what the bottom USB port can be as a USB device (gadget functions, isochronous endpoints). Copy `probe-gadget.sh` and `build/probe-iso` to one folder, run `sh probe-gadget.sh` as root with no app open and the bottom port empty. Results: [docs/hardware.md](docs/hardware.md#the-bottom-usb-port-as-a-device) |
 | [`tools/joydump.c`](tools/joydump.c), [`tools/evdump.c`](tools/evdump.c) | On the device: print SDL joystick events (and how `brick_input` reads them) / raw kernel input events. `cd tools && make` |
 | [`docs/brick-hammer-mapping.md`](docs/brick-hammer-mapping.md) | A checklist for mapping a Brick Hammer's LEDs and buttons by hand |
 
@@ -70,6 +71,8 @@ Facts carry one of these tags:
 - **[NextUI]**: read from NextUI's `workspace/tg5040` platform code.
 - **[LED'oh]**: from the LED'oh! project's Brick teardown (`ericreinsmidt/nextui-ledoh`).
 - **[web]**: from spec sheets and reviews.
+- **[probe]**: measured on a device with one of the probe tools here (the device and firmware are
+  given with the result).
 - **[unverified]**: sources disagree or nobody has tested it. See [docs/open-questions.md](docs/open-questions.md).
 
 When you confirm something on a device, update the tag and the open questions list.

@@ -106,6 +106,9 @@ SDL audio themselves.
 
 - The **top** USB-C port is the host port; the bottom one charges. It gives about 500 mA; use a powered
   hub for hungry devices.
+- The bottom port isn't a USB sound card for another host: the kernel has no USB audio gadget, and its
+  isochronous endpoints bind one way only, never both ways at once. See
+  [hardware.md](hardware.md#the-bottom-usb-port-as-a-device) **[probe]**.
 - Class-compliant interfaces and DACs work. Pick one by name: look for `usb`, `uac` or `dac` in
   `SDL_GetAudioDeviceName(i, 0)`.
 - On `SDL_AUDIODEVICEADDED` / `SDL_AUDIODEVICEREMOVED`, pick again and reopen. Copy the device name
