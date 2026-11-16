@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Shell scripts parse
         run: for s in templates/*/*.sh tools/*.sh tests/run.sh; do sh -n "$s"; done
-      - name: Host tests (LED drivers, MIDI parser)
+      - name: Host tests (LED drivers, MIDI parser, brickio's input ring)
         run: tests/run.sh
       - name: Device builds (zig, aarch64)
         run: |
@@ -23,4 +23,13 @@ jobs:
           # the MustardOS package (the only one built): the binary and its launchers
           for f in skeleton launch.sh mux_launch.sh wake_screen.sh sysinfo.sh glyph/skeleton.svg; do
             unzip -l examples/skeleton/build/Skeleton-mustardos.muxapp | grep -q "Skeleton/$f$" || { echo "::error::no $f"; exit 1; }
+          done
+      - name: The shared code is TrimFX's
+        run: |
+          # lib/brickio, perflog and ringleds are kept as Trimui-Trimfx-dev's (sync.yml); a nudge, not a failure
+          git clone -q --depth 1 https://github.com/sydilaxe/Trimui-Trimfx-dev "$RUNNER_TEMP/trimfx" || exit 0
+          t="$RUNNER_TEMP/trimfx"
+          for f in lib/brickio src/perflog.c src/perflog.h src/ringleds.c src/ringleds.h; do
+            diff -rq "$t/$f" "$f" >/dev/null ||
+              echo "::warning title=Shared code differs from TrimFX::$f isn't the same as Trimui-Trimfx-dev's. Change it there; sync.yml brings it here."
           done

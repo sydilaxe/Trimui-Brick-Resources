@@ -57,6 +57,7 @@ uint64_t perf_now_us(void)
 }
 
 int perf_level(void) { return level; }
+void perf_set_level(int l) { level = l < PERF_OFF ? PERF_OFF : l > PERF_DETAIL ? PERF_DETAIL : l; }
 
 static void vline(const char *tag, const char *fmt, va_list ap)
 {

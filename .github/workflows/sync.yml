@@ -1,0 +1,78 @@
+# Keeps the shared code in step with Trimui-Trimfx-dev, where it is worked on: lib/brickio (USB audio
+# and MIDI), src/perflog.* and src/ringleds.*. Daily, or by hand from the Actions tab: when TrimFX's
+# copy differs, it copies it, runs the host tests and the device build with it, and opens (or updates)
+# a pull request from the branch sync/trimfx.
+#
+# GitHub only lets a workflow open pull requests when Settings > Actions > General > "Allow GitHub
+# Actions to create and approve pull requests" is ticked. Without it, the branch is still pushed and
+# the run fails with a note: open the pull request from sync/trimfx by hand.
+name: sync from TrimFX
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-trimfx
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy TrimFX's shared code
+        id: copy
+        run: |
+          git clone -q --depth 1 https://github.com/sydilaxe/Trimui-Trimfx-dev "$RUNNER_TEMP/trimfx"
+          t="$RUNNER_TEMP/trimfx"
+          rm -rf lib/brickio && mkdir -p lib && cp -r "$t/lib/brickio" lib/
+          cp "$t/src/perflog.c" "$t/src/perflog.h" "$t/src/ringleds.c" "$t/src/ringleds.h" src/
+          echo "sha=$(git -C "$t" rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "already the same as Trimui-Trimfx-dev@$(git -C "$t" rev-parse --short HEAD)"
+            echo "changed=0" >> "$GITHUB_OUTPUT"
+          else
+            git status --short
+            echo "changed=1" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Host tests with the new copy
+        if: steps.copy.outputs.changed == '1'
+        run: tests/run.sh
+      - name: Device build with the new copy (zig, aarch64)
+        if: steps.copy.outputs.changed == '1'
+        run: |
+          pip install ziglang==0.14.1
+          make -C examples/skeleton package
+          file examples/skeleton/build/trimui/skeleton | grep -q "ARM aarch64"
+      - name: Open or update the pull request
+        if: steps.copy.outputs.changed == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.copy.outputs.sha }}
+        run: |
+          b=sync/trimfx
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$b"
+          git add -A
+          git commit -q -m "Sync lib/brickio, perflog and ringleds from Trimui-Trimfx-dev@$SHA"
+          git push -f origin "$b"
+          if [ -n "$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$b" --state open --json number --jq '.[].number')" ]; then
+            echo "the open pull request from $b now has Trimui-Trimfx-dev@$SHA"
+            exit 0
+          fi
+          body="Trimui-Trimfx-dev@$SHA changed the shared code. This copies it here: \`lib/brickio/\`, \`src/perflog.*\`, \`src/ringleds.*\`.
+
+          The host tests (\`tests/run.sh\`) and the skeleton's device build passed with it in the sync run.
+          Check \`docs/audio.md\` and the README if what the module does has changed."
+          gh pr create --repo "$GITHUB_REPOSITORY" --base "${{ github.event.repository.default_branch }}" --head "$b" \
+            --title "Sync the shared code from Trimui-Trimfx-dev@$SHA" --body "$body" || {
+            echo "::error::branch $b is pushed, but GitHub refused to open the pull request: tick Settings > Actions > General > 'Allow GitHub Actions to create and approve pull requests', or open it from $b by hand"
+            exit 1
+          }

@@ -31,11 +31,13 @@ on. To start a new app, copy `examples/skeleton/` and the `src/` files it uses.
 8. **On the original Brick use the named zones** (`f1`, `f2`, `m`, `lr`), not `frame_hex`, unless you
    use the toggle workaround in [docs/leds.md](docs/leds.md). On the Brick Pro use `frame_hex`: the
    named zones only reach the left stick's ring there.
-9. **Keep the audio callback small**: 16-bit stereo at 48 kHz, 512-frame buffers (1024 if it
-   crackles), memory locked with `mlockall`, flush-to-zero set on the audio threads, governor
-   `performance` while running. [docs/audio.md](docs/audio.md)
-10. **Follow USB audio hot-plug**: reopen the SDL audio device on `SDL_AUDIODEVICEADDED/REMOVED`.
-    The top USB-C port is the host port.
+9. **Use `lib/brickio` for sound and MIDI.** It opens the USB interface first, direct (about 25 ms
+   round trip instead of 90), in 32-bit float, follows hot-plug and drift, and runs real-time. Keep
+   your `process` function small: memory locked with `mlockall`, flush-to-zero set on the audio
+   thread, governor `performance` while running. [lib/brickio/README.md](lib/brickio/README.md),
+   [docs/audio.md](docs/audio.md)
+10. **Follow USB audio hot-plug**: pass every SDL event to `ua_event` (or, without brickio, reopen the
+    SDL audio device on `SDL_AUDIODEVICEADDED/REMOVED`). The top USB-C port is the host port.
 11. **Build with zig** for `aarch64-linux-gnu.2.28 -mcpu=cortex_a53` against a stub `libSDL2-2.0.so.0`;
     the device's own SDL2 is loaded at run time. [docs/build.md](docs/build.md)
 12. **Build only for MustardOS.** The sydilaxe TrimUI apps ship only MustardOS `.muxapp` packages
@@ -48,7 +50,9 @@ on. To start a new app, copy `examples/skeleton/` and the `src/` files it uses.
   `[unverified]`), as the docs do.
 - When a device test confirms or disproves something, fix the doc, move the item out of
   [docs/open-questions.md](docs/open-questions.md) and note the firmware version it was tested on.
-- `src/ringleds.c`, `src/perflog.c`, `tools/sysinfo.sh` and `tools/mksdlstub.py` are copies from the
-  sydilaxe apps; `brick_input`, `brick_zones` and `brick_midi` are standalone versions of their code.
+- `lib/brickio/`, `src/ringleds.*` and `src/perflog.*` are copies of Trimui-Trimfx-dev's, kept in step
+  by `.github/workflows/sync.yml` (daily: it opens a pull request when TrimFX's copy changes, tests
+  included). Change them in TrimFX, not here. `tools/sysinfo.sh` and `tools/mksdlstub.py` are copies
+  from the sydilaxe apps; `brick_input`, `brick_zones` and `brick_midi` are standalone versions of their code.
   If you improve one in an app, bring it back here.
 - Before committing: `tests/run.sh`, `cd examples/skeleton && make package`, `cd tools && make`.

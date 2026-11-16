@@ -162,6 +162,15 @@ static uint32_t glow(uint32_t c, float t)
 }
 
 uint32_t ringleds_glow(uint32_t c, float t) { return glow(c, t); }
+static int cust_bar, cust_ring;
+static uint32_t cbar[8], cring[8];
+void ringleds_custom(const uint32_t *bar8, const uint32_t *rings8)
+{
+    cust_bar = bar8 != NULL;
+    cust_ring = rings8 != NULL;
+    if (bar8) memcpy(cbar, bar8, sizeof cbar);
+    if (rings8) memcpy(cring, rings8, sizeof cring);
+}
 /* L1, L2, R2, R1: the frame's order */
 static uint32_t shoulder[4] = {RINGLEDS_BEAT, RINGLEDS_BEAT, RINGLEDS_BEAT, RINGLEDS_BEAT};
 void ringleds_shoulders(uint32_t l1, uint32_t l2, uint32_t r1, uint32_t r2)
@@ -199,6 +208,10 @@ void ringleds_update(float lx, float ly, uint32_t lcol, float rx, float ry, uint
         f[F_RING_L + k] = glow(lcol, lx * cx[k] + ly * cy[k]);
         f[F_RING_R + k] = glow(rcol, rx * cx[k] + ry * cy[k]);
     }
+    if (cust_bar)
+        for (int k = 0; k < 8; k++) f[F_BAR + k] = bar_on ? cbar[k] : 0;
+    if (cust_ring)
+        for (int k = 0; k < 4; k++) f[F_RING_L + k] = cring[k], f[F_RING_R + k] = cring[4 + k];
     /* the beat: each quarter note (four 16ths) starts a flash that fades over it */
     static int last_step = -1;
     static uint64_t beat_at;

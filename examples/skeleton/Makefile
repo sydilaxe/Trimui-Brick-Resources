@@ -13,10 +13,12 @@ CPU      := cortex_a53
 APP      := skeleton
 NAME     := Skeleton
 SDL_INC  := $(ROOT)/third_party/SDL2-2.30.9-headers
-SRC      := main.c $(ROOT)/src/brick_input.c $(ROOT)/src/brick_zones.c $(ROOT)/src/brick_midi.c \
-            $(ROOT)/src/ringleds.c $(ROOT)/src/perflog.c
+# lib/brickio: USB audio and MIDI (see lib/brickio/README.md)
+BRICKIO  := $(ROOT)/lib/brickio/usbaudio.c $(ROOT)/lib/brickio/aring.c $(ROOT)/lib/brickio/midi.c
+SRC      := main.c $(ROOT)/src/brick_input.c $(ROOT)/src/brick_zones.c $(ROOT)/src/ringleds.c \
+            $(ROOT)/src/perflog.c $(BRICKIO)
 CFLAGS   ?= -O2
-CFLAGS   += -std=gnu11 -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I$(ROOT)/src
+CFLAGS   += -std=gnu11 -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -I$(ROOT)/src -I$(ROOT)/lib/brickio
 
 DEV_CC   = $(ZIG) cc -target $(ZTARGET) -mcpu=$(CPU)
 
